@@ -1,0 +1,33 @@
+name: Fetch A-Stock Data
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'  # 每4小时运行一次 (A股交易时间)
+  workflow_dispatch:
+
+jobs:
+  fetch-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install akshare pandas -i https://pypi.tuna.tsinghua.edu.cn/simple
+      
+      - name: Fetch A-stock data
+        run: |
+          python scripts/fetch_a_stock.py
+      
+      - name: Commit and push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/
+          git diff --staged --quiet || git commit -m "Update A-stock data - $(date -u +%Y-%m-%d_%H:%M) UTC"
+          git push
